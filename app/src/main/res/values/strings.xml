@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">JSONReader</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="fajr">Fajr Time: </string>
+    <string name="zuhr">Zuhr Time: </string>
+    <string name="asr">Asr Time: </string>
+    <string name="maghrib">Maghrib Time: </string>
+    <string name="isha">Isha Time: </string>
+
+
+
+
+</resources>
