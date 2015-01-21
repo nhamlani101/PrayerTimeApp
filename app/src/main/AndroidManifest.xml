@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.nhamlani101.materialtest">
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-sdk android:minSdkVersion="11" />
 
     <application
         android:allowBackup="true"

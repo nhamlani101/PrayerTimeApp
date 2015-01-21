@@ -1,56 +1,129 @@
 package com.example.nhamlani101.materialtest;
 
-import android.support.v7.app.ActionBarActivity;
+import android.app.Activity;
+import android.os.AsyncTask;
 import android.os.Bundle;
 
-import android.util.Log;
+import android.support.v7.app.ActionBarActivity;
+import android.util.JsonReader;
+import android.util.JsonToken;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.InputStreamReader;
 
 
-public class MainActivity extends ActionBarActivity {
+
+public class MainActivity extends Activity{
+
+    TextView fajrTV;
+    TextView zuhrTV;
+    TextView asrTV;
+    TextView maghribTV;
+    TextView ishaTV;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        new GetMethodEx().execute("http://muslimsalat.com/11717/daily/4.json?key=ea4417ebf152c478082e1ff6a1a759d9");
+    }
 
-        final TextView fajrTV = (TextView) findViewById(R.id.fajr);
-        final TextView zuhrTV = (TextView) findViewById(R.id.zuhr);
-        final TextView asrTV = (TextView) findViewById(R.id.asr);
-        final TextView maghribTV = (TextView) findViewById(R.id.maghrib);
-        final TextView ishaTV = (TextView) findViewById(R.id.isha);
+    public class GetMethodEx  extends AsyncTask<String, Void, InputStream> {
 
-        //String source = "This is the source of my input stream";
-        //InputStream in = IOUtils.toInputStream(source, "UTF-8");
-        GetMethodEx test = new GetMethodEx();
-        InputStream ins;
-        List prayList = new ArrayList();
-        readJson myJson = new readJson();
-        ins = test.getInternetData();
-
-        try {
-            prayList = myJson.readJsonStream(ins);
-        } catch (Exception e) {
-            e.printStackTrace();
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            fajrTV = (TextView) findViewById(R.id.fajr);
+            zuhrTV = (TextView) findViewById(R.id.zuhr);
+            asrTV = (TextView) findViewById(R.id.asr);
+            maghribTV = (TextView) findViewById(R.id.maghrib);
+            ishaTV = (TextView) findViewById(R.id.isha);
         }
 
-
-        if (prayList.isEmpty() == true) {
-            fajrTV.setText("The array is empty brah");
+        @Override
+        protected InputStream doInBackground(String... params) {
+            try {
+                HttpClient client = new DefaultHttpClient();
+                HttpPost post = new HttpPost(params[0]);
+                HttpResponse response = client.execute(post);
+                int status = response.getStatusLine().getStatusCode();
+                if (status == 200) {
+                    HttpEntity entity = response.getEntity();
+                    InputStream in = entity.getContent();
+                    return in;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
         }
 
-        //fajrTV.setText((String) prayList.get(0));
-        //zuhrTV.setText((String) prayList.get(1));
-        //asrTV.setText((String) prayList.get(2));
-        //maghribTV.setText((String) prayList.get(3));
-        //ishaTV.setText((String) prayList.get(4));
+        @Override
+        protected void onPostExecute(InputStream in) {
+            super.onPostExecute(in);
+            try {
+                JsonReader reader = new JsonReader(new InputStreamReader(in, "UTF-8"));
+
+                String fajr = null;
+                String zuhr = null;
+                String asr = null;
+                String maghrib = null;
+                String isha = null;
+
+                reader.beginObject();
+                while (reader.hasNext()) {
+                    String name = reader.nextName();
+                    if (name.equals("items")) {
+                        reader.beginArray();
+                        while (reader.hasNext()) {
+                            reader.beginObject();
+                            while (reader.hasNext()) {
+                                String innerName = reader.nextName();
+                                final boolean isInnerNull = reader.peek() == JsonToken.NULL;
+                                if (innerName.equals("fajr") && !isInnerNull) {
+                                    fajr = reader.nextString();
+                                } else if (innerName.equals("dhuhr") && !isInnerNull) {
+                                    zuhr = reader.nextString();
+                                } else if (innerName.equals("asr") && !isInnerNull) {
+                                    asr = reader.nextString();
+                                } else if (innerName.equals("maghrib") && !isInnerNull) {
+                                    maghrib = reader.nextString();
+                                } else if (innerName.equals("isha") && !isInnerNull) {
+                                    isha = reader.nextString();
+                                } else {
+                                    reader.skipValue();
+                                }
+                            }
+                            reader.endObject();
+                        }
+                        reader.endArray();
+                    } else {
+                        reader.skipValue();
+                    }
+                }
+                reader.endObject();
+                reader.close();
+
+                fajrTV.setText(fajr);
+                zuhrTV.setText(zuhr);
+                asrTV.setText(asr);
+                maghribTV.setText(maghrib);
+                ishaTV.setText(isha);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
